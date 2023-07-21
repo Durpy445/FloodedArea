@@ -1,0 +1,111 @@
+local player = game.Players.LocalPlayer
+local mouse = player:GetMouse()
+local target = nil
+local RopeBug = false
+local GlueBug1, GlueBug2 = false, false
+local GlueBugA, GlueBugB = nil, nil
+
+local Gui = Instance.new("ScreenGui")
+Gui.Name = "Hack"
+Gui.Parent = player.PlayerGui
+
+local Frame = Instance.new("Frame")
+Frame.Parent = Gui
+Frame.Size = UDim2.new(0.189, 0, 0.675, 0) -- Increased height to accommodate the text box
+Frame.Position = UDim2.new(0, 0, 0.194, 0)
+
+local function createToggleButton(name, positionY)
+    local toggleButton = Instance.new("TextButton")
+    toggleButton.Name = name
+    toggleButton.TextScaled = true
+    toggleButton.Parent = Frame
+    toggleButton.Size = UDim2.new(1, 0, 0.2, 0)
+    toggleButton.Position = UDim2.new(0, 0, positionY, 0)
+    toggleButton.Text = name
+    toggleButton.BackgroundColor3 = BrickColor.Red().Color
+
+    return toggleButton
+end
+
+local ToggleRope = createToggleButton("Rope Bug", 0)
+local ToggleGlue1 = createToggleButton("Glue Bug 1", 0.2)
+local ToggleGlue2 = createToggleButton("Glue Bug 2", 0.4)
+
+ToggleRope.MouseButton1Click:Connect(function()
+    RopeBug = not RopeBug
+    ToggleRope.BackgroundColor3 = RopeBug and BrickColor.Green().Color or BrickColor.Red().Color
+end)
+
+ToggleGlue1.MouseButton1Click:Connect(function()
+    GlueBug1 = not GlueBug1
+    ToggleGlue1.BackgroundColor3 = GlueBug1 and BrickColor.Green().Color or BrickColor.Red().Color
+end)
+
+ToggleGlue2.MouseButton1Click:Connect(function()
+    GlueBug2 = not GlueBug2
+    ToggleGlue2.BackgroundColor3 = GlueBug2 and BrickColor.Green().Color or BrickColor.Red().Color
+end)
+
+-- Add a text box for the "G" instruction
+local TextBox = Instance.new("TextBox")
+TextBox.Name = "GInstruction"
+TextBox.Parent = Frame
+TextBox.Size = UDim2.new(1, 0, 0.2, 0)
+TextBox.Position = UDim2.new(0, 0, 0.6, 0)
+TextBox.Text = "Press G to activate Glue Bug"
+TextBox.TextScaled = true
+TextBox.BackgroundTransparency = 1
+
+local function button1Down()
+    target = mouse.Target
+end
+
+local function button1Up()
+    if target == mouse.Target then
+        if RopeBug then
+            local args = {
+                [1] = {
+                    [1] = workspace.Movable:FindFirstChild(target.Name),
+                    [2] = Vector3.new(0, 999999999999999, 0)
+                },
+                [2] = {
+                    [1] = workspace.Movable:FindFirstChild(target.Name),
+                    [2] = Vector3.new(4, 999999999999999, 0)
+                }
+            }
+
+            game:GetService("ReplicatedStorage").Rope_Create:InvokeServer(unpack(args))
+        end
+
+        if GlueBug1 then
+            GlueBugA = target.Name
+        end
+
+        if GlueBug2 then
+            GlueBugB = target.Name
+        end
+    end
+end
+
+mouse.Button1Down:Connect(button1Down)
+mouse.Button1Up:Connect(button1Up)
+
+local UserInputService = game:GetService("UserInputService")
+UserInputService.InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.G then
+        local args = {
+            [1] = workspace.Movable:FindFirstChild(GlueBugA),
+            [2] = {
+                [1] = {
+                    [1] = workspace.Movable:FindFirstChild(GlueBugA),
+                    [2] = workspace.Movable:FindFirstChild(GlueBugB),
+                    [3] = workspace.Movable:FindFirstChild(GlueBugA),
+                    [4] = GlueBugA .. " " .. GlueBugB,
+                    [5] = CFrame.new(target.Size.X / 2 + 0.5, 0, 0) * CFrame.Angles(0, 0, 0)
+                }
+            }
+        }
+
+        game:GetService("ReplicatedStorage").Glue_part:InvokeServer(unpack(args))
+    end
+end)
